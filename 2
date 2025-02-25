@@ -34,3 +34,7 @@ WITH m, COUNT(DISTINCT p) AS participantCount
 ORDER BY participantCount DESC
 LIMIT 1
 RETURN m.title AS MovieTitle, participantCount
+
+MATCH (p:Person)-[:ACTED_IN]-(m:Movie)
+RETURN p.name AS Actor, m.title AS Title
+ORDER BY Actor, Title ASC

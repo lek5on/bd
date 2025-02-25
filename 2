@@ -43,3 +43,7 @@ ORDER BY Actor, Title ASC
 MATCH (p:Person)-[:ACTED_IN]-(m:Movie)
 RETURN p.name AS Actor, m.title AS Title
 ORDER BY Actor, Title ASC
+
+MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+RETURN p.name AS Actor, COUNT(m) AS MovieCount
+ORDER BY MovieCount DESC

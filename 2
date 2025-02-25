@@ -1,0 +1,36 @@
+//Связь человек-снял-фильм и обращение к матрица
+MATCH (p:Person)-[:DIRECTED]->(m:Movie {title: "The Matrix"})
+
+//Выводим имя и указываем что это режиссёр
+RETURN p.name AS Director
+
+
+MATCH (p:Person)-[:ACTED_IN]-(m:Movie)
+
+//Сортировка по возрастанию
+ORDER BY p.name, m.title ASC
+return p.name AS Actor, m.title as Title
+
+
+MATCH (p:Person)-[:ACTED_IN]->(m:Movie) 
+
+//кол-во фильмов у одного человека
+WITH p, COUNT(m) AS movieCount 
+
+//сортируем по убыванию
+ORDER BY movieCount DESC
+
+//выводим только первый вариант(самый большой)
+LIMIT 1 
+RETURN p.name AS Actor, movieCount
+
+
+MATCH (m:Movie)<-[r:ACTED_IN|DIRECTED]-(p:Person)
+
+//без дистинкт человек может быть учтён как режиссер и актер
+WITH m, COUNT(DISTINCT p) AS participantCount
+
+//сортировка по убыванию
+ORDER BY participantCount DESC
+LIMIT 1
+RETURN m.title AS MovieTitle, participantCount

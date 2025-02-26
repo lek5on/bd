@@ -47,3 +47,9 @@ ORDER BY Actor, Title ASC
 MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
 RETURN p.name AS Actor, COUNT(m) AS MovieCount
 ORDER BY MovieCount DESC
+
+MATCH (m:Movie)-[:ACTED_IN]-(p:Person)
+WITH m.tagline AS tagline, collect(p.name) AS actors, m.title AS movieTitle
+HAVING size(actors) > 1  // Убираем фильмы с единственным актером
+ORDER BY tagline, movieTitle
+RETURN tagline, movieTitle, actors

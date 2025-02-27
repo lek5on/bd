@@ -53,3 +53,11 @@ WITH m.tagline AS tagline, collect(p.name) AS actors, m.title AS movieTitle
 HAVING size(actors) > 1  // Убираем фильмы с единственным актером
 ORDER BY tagline, movieTitle
 RETURN tagline, movieTitle, actors
+
+
+MATCH (m:Movie)-[:ACTED_IN]-(p:Person)
+WITH m.tagline AS tagline, m.title AS movieTitle, COLLECT(p.name) AS actors
+WITH tagline, COLLECT({title: movieTitle, actors: actors}) AS movies
+WHERE SIZE(movies) > 1  // Оставляем только те теглайны, у которых более одного фильма
+RETURN tagline, movies
+ORDER BY tagline

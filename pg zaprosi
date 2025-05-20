@@ -1,0 +1,197 @@
+-- Простые запросы
+
+-- 1. Выбор всех книг
+SELECT * FROM Books;
+
+-- 2. Выбор книг с определенным издателем
+SELECT b.* 
+FROM Books b
+JOIN Publishers p ON b.publisher_id = p.publisher_id
+WHERE p.publisher_name = 'Эксмо';
+
+-- 3. Подсчет количества книг по типам публикаций
+SELECT pt.type_name, COUNT(b.book_id) as book_count
+FROM PublicationTypes pt
+LEFT JOIN Books b ON pt.publication_type_id = b.publication_type_id
+GROUP BY pt.type_name;
+
+-- 4. Выбор уникальных типов публикаций
+SELECT DISTINCT type_name 
+FROM PublicationTypes;
+
+-- 5. Получение списка всех подписчиков
+SELECT * FROM Subscribers;
+
+-- 6. Поиск подписчиков, зарегистрированных после определенной даты
+SELECT * 
+FROM Subscribers 
+WHERE membership_date > '2023-06-01';
+
+-- 7. Обновление информации о книге
+UPDATE Books 
+SET title = 'Новое название', publication_year = 2021
+WHERE book_id = 1;
+
+-- 8. Удаление подписчика по ID
+DELETE FROM Subscribers 
+WHERE subscriber_id = 1;
+
+-- 9. Получение списка книг с их издателями
+SELECT b.title, p.publisher_name
+FROM Books b
+JOIN Publishers p ON b.publisher_id = p.publisher_id;
+
+-- 10. Выбор книг, выпущенных в определенном году
+SELECT * 
+FROM Books 
+WHERE publication_year = 1866;
+
+-- 11. Подсчет общего количества подписчиков
+SELECT COUNT(*) as total_subscribers 
+FROM Subscribers;
+
+-- 12. Получение списка книг, которые находятся в определенном месте хранения
+SELECT b.* 
+FROM Books b
+JOIN StorageLocations sl ON b.storage_location_id = sl.storage_location_id
+WHERE sl.location_name = 'Главный стеллаж А';
+
+-- 13. Получение информации о займах книг
+SELECT l.loan_id, b.title, s.name as subscriber_name, lib.name as librarian_name, l.loan_date, l.return_date
+FROM Loans l
+JOIN Books b ON l.book_id = b.book_id
+JOIN Subscribers s ON l.subscriber_id = s.subscriber_id
+JOIN Librarians lib ON l.librarian_id = lib.librarian_id;
+
+-- 14. Получение списка библиотекарей, работающих дольше года
+SELECT * 
+FROM Librarians 
+WHERE employment_date < CURRENT_DATE - INTERVAL '1 year';
+
+-- 15. Получение количества книг в каждом месте хранения
+SELECT sl.location_name, COUNT(b.book_id) as book_count
+FROM StorageLocations sl
+LEFT JOIN Books b ON sl.storage_location_id = b.storage_location_id
+GROUP BY sl.location_name;
+
+-- 16. Поиск книг с определенным ISBN
+SELECT * 
+FROM Books 
+WHERE ISBN = '978-5-699-12345-7';
+
+-- 17. Получение списка всех типов публикаций и количества книг для каждого типа
+SELECT pt.type_name, COUNT(b.book_id) as book_count
+FROM PublicationTypes pt
+LEFT JOIN Books b ON pt.publication_type_id = b.publication_type_id
+GROUP BY pt.type_name;
+
+-- 18. Получение информации о книгах, которые были выданы в течение последнего месяца
+SELECT b.title, l.loan_date, l.return_date
+FROM Books b
+JOIN Loans l ON b.book_id = l.book_id
+WHERE l.loan_date >= CURRENT_DATE - INTERVAL '1 month';
+
+-- 19. Обновление адреса издателя
+UPDATE Publishers 
+SET address = 'Москва, ул. Новый адрес, 10'
+WHERE publisher_id = 1;
+
+-- 20. Удаление всех займов для определенной книги
+DELETE FROM Loans 
+WHERE book_id = 1;
+
+-- Средние запросы 1.0
+
+-- 1. Получение списка книг с количеством займов и их средним временем займа
+SELECT b.title, 
+       COUNT(l.loan_id) as loan_count,
+       AVG(EXTRACT(EPOCH FROM (l.return_date - l.loan_date)) / 86400) as avg_loan_days
+FROM Books b
+LEFT JOIN Loans l ON b.book_id = l.book_id
+WHERE l.return_date IS NOT NULL
+GROUP BY b.title;
+
+-- 2. Получение подписчиков, которые не брали книги более 6 месяцев
+SELECT s.name
+FROM Subscribers s
+LEFT JOIN Loans l ON s.subscriber_id = l.subscriber_id
+WHERE l.loan_date IS NULL OR l.loan_date < CURRENT_DATE - INTERVAL '6 months'
+GROUP BY s.name;
+
+-- 3. Получение списка книг и их авторов с указанием количества книг каждого автора
+-- Примечание: Таблица авторов отсутствует в предоставленных данных. Если есть таблица Authors, использовать:
+-- SELECT a.author_name, COUNT(b.book_id) as book_count
+-- FROM Authors a
+-- JOIN BookAuthors ba ON a.author_id = ba.author_id
+-- JOIN Books b ON ba.book_id = b.book_id
+-- GROUP BY a.author_name;
+
+-- 4. Подсчет общего количества книг и подписчиков для каждого издателя
+SELECT p.publisher_name, 
+       COUNT(DISTINCT b.book_id) as book_count,
+       COUNT(DISTINCT l.subscriber_id) as subscriber_count
+FROM Publishers p
+LEFT JOIN Books b ON p.publisher_id = b.publisher_id
+LEFT JOIN Loans l ON b.book_id = l.book_id
+GROUP BY p.publisher_name;
+
+-- 5. Получение топ-3 книг с наибольшим количеством займов за последний год
+SELECT b.title, COUNT(l.loan_id) as loan_count
+FROM Books b
+JOIN Loans l ON b.book_id = l.book_id
+WHERE l.loan_date >= CURRENT_DATE - INTERVAL '1 year'
+GROUP BY b.title
+ORDER BY loan_count DESC
+LIMIT 3;
+
+-- Средние запросы 2.0
+
+-- 1. Получение списка подписчиков, которые брали книги только у определенного издателя за последний год
+SELECT s.name
+FROM Subscribers s
+JOIN Loans l ON s.subscriber_id = l.subscriber_id
+JOIN Books b ON l.book_id = b.book_id
+JOIN Publishers p ON b.publisher_id = p.publisher_id
+WHERE l.loan_date >= CURRENT_DATE - INTERVAL '1 year'
+GROUP BY s.name
+HAVING COUNT(DISTINCT p.publisher_id) = 1 AND MIN(p.publisher_name) = 'Эксмо';
+
+-- 2. Получение авторов, которые не имеют книг, взятых в аренду более 3 раз за последний год
+-- Примечание: Таблица авторов отсутствует. Если есть таблица Authors, использовать:
+-- SELECT a.author_name
+-- FROM Authors a
+-- JOIN BookAuthors ba ON a.author_id = ba.author_id
+-- JOIN Books b ON ba.book_id = b.book_id
+-- LEFT JOIN Loans l ON b.book_id = l.book_id
+-- WHERE l.loan_date IS NULL OR l.loan_date >= CURRENT_DATE - INTERVAL '1 year'
+-- GROUP BY a.author_name
+-- HAVING COUNT(l.loan_id) <= 3;
+
+-- 3. Получение топ-5 самых активных подписчиков по количеству займов за последние 6 месяцев и их среднему времени займа
+SELECT s.name, 
+       COUNT(l.loan_id) as loan_count,
+       AVG(EXTRACT(EPOCH FROM (l.return_date - l.loan_date)) / 86400) as avg_loan_days
+FROM Subscribers s
+JOIN Loans l ON s.subscriber_id = l.subscriber_id
+WHERE l.loan_date >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY s.name
+ORDER BY loan_count DESC
+LIMIT 5;
+
+-- 4. Получение книг с указанием количества займов и последних дат возврата для каждой книги
+SELECT b.title, 
+       COUNT(l.loan_id) as loan_count,
+       MAX(l.return_date) as last_return_date
+FROM Books b
+LEFT JOIN Loans l ON b.book_id = l.book_id
+GROUP BY b.title;
+
+-- 5. Подсчет общего количества книг и подписчиков для каждого издателя с условием на минимальное количество книг
+SELECT p.publisher_name, 
+       COUNT(DISTINCT b.book_id) as book_count,
+       COUNT(DISTINCT l.subscriber_id) as subscriber_count
+FROM Publishers p
+LEFT JOIN Books b ON p.publisher_id = b.publisher_id
+LEFT JOIN Loans l ON b.book_id = l.book_id
+GROUP BY p.publisher_name
+HAVING COUNT(DISTINCT b.book_id) >= 5;

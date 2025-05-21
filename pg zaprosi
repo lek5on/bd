@@ -191,3 +191,13 @@ LEFT JOIN Books b ON p.publisher_id = b.publisher_id
 LEFT JOIN Loans l ON b.book_id = l.book_id
 GROUP BY p.publisher_name
 HAVING COUNT(DISTINCT b.book_id) >= 5;
+
+SELECT s.name
+FROM Subscribers s
+JOIN Loans l ON s.subscriber_id = l.subscriber_id
+JOIN Books b ON l.book_id = b.book_id
+JOIN Publishers p ON b.publisher_id = p.publisher_id
+WHERE l.loan_date >= CURRENT_DATE - INTERVAL '1 year'
+  AND p.publisher_name = 'Эксмо'
+GROUP BY s.name
+HAVING COUNT(DISTINCT p.publisher_id) = 1;

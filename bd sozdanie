@@ -1,0 +1,76 @@
+-- Создание таблицы PublicationTypes
+CREATE TABLE PublicationTypes (
+    publication_type_id SERIAL PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL
+);
+
+-- Создание таблицы Publishers
+CREATE TABLE Publishers (
+    publisher_id SERIAL PRIMARY KEY,
+    publisher_name VARCHAR(100) NOT NULL,
+    address VARCHAR(200),
+    phone VARCHAR(20)
+);
+
+-- Создание таблицы Topics
+CREATE TABLE Topics (
+    topic_id SERIAL PRIMARY KEY,
+    topic_name VARCHAR(100) NOT NULL
+);
+
+-- Создание таблицы StorageLocations
+CREATE TABLE StorageLocations (
+    storage_location_id SERIAL PRIMARY KEY,
+    location_name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+-- Создание таблицы Authors
+CREATE TABLE Authors (
+    author_id SERIAL PRIMARY KEY,
+    author_name VARCHAR(100) NOT NULL
+);
+
+-- Создание таблицы Books
+CREATE TABLE Books (
+    book_id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    publication_type_id INT REFERENCES PublicationTypes(publication_type_id),
+    publisher_id INT REFERENCES Publishers(publisher_id),
+    storage_location_id INT REFERENCES StorageLocations(storage_location_id),
+    publication_year INT,
+    ISBN VARCHAR(20) UNIQUE
+);
+
+-- Создание связующей таблицы BookAuthors
+CREATE TABLE BookAuthors (
+    book_id INT REFERENCES Books(book_id),
+    author_id INT REFERENCES Authors(author_id),
+    PRIMARY KEY (book_id, author_id)
+);
+
+-- Создание таблицы Subscribers
+CREATE TABLE Subscribers (
+    subscriber_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    membership_date DATE NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+
+-- Создание таблицы Librarians
+CREATE TABLE Librarians (
+    librarian_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    employment_date DATE NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+
+-- Создание таблицы Loans
+CREATE TABLE Loans (
+    loan_id SERIAL PRIMARY KEY,
+    book_id INT REFERENCES Books(book_id),
+    subscriber_id INT REFERENCES Subscribers(subscriber_id),
+    librarian_id INT REFERENCES Librarians(librarian_id),
+    loan_date DATE NOT NULL,
+    return_date DATE
+);

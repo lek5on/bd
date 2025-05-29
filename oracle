@@ -1,0 +1,192 @@
+-- 1. Функция: Получить название должности по ID
+CREATE OR REPLACE FUNCTION get_job_name(p_job_id VARCHAR2)
+RETURN VARCHAR2
+IS
+  v_title VARCHAR2(50);
+BEGIN
+  SELECT job_title INTO v_title
+  FROM jobs
+  WHERE job_id = p_job_id;
+  RETURN v_title;
+END;
+/
+
+-- Тестирование:
+SELECT get_job_name('IT_PROG') AS job_title FROM dual;
+
+-- Вывод всех записей:
+SELECT * FROM jobs;
+
+-- 2. Процедура: Добавить новый департамент
+CREATE OR REPLACE PROCEDURE add_dept(p_name VARCHAR2)
+IS
+BEGIN
+  INSERT INTO departments (department_id, department_name)
+  VALUES (departments_seq.NEXTVAL, p_name);
+END;
+/
+
+-- Тестирование:
+BEGIN
+  add_dept('New Test1 Department');
+  COMMIT;
+END;
+/
+
+SELECT * FROM departments WHERE department_name = 'New Test1 Department';
+
+
+-- 3. Функция: Проверить, является ли сотрудник менеджером
+CREATE OR REPLACE FUNCTION is_manager(p_emp_id NUMBER)
+RETURN VARCHAR2
+IS
+  v_count NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v_count FROM employees WHERE manager_id = p_emp_id;
+  IF v_count > 0 THEN
+    RETURN 'YES';
+  ELSE
+    RETURN 'NO';
+  END IF;
+END;
+/
+
+-- Тестирование:
+SELECT employee_id, first_name, last_name, is_manager(employee_id) AS is_manager
+FROM employees WHERE rownum < 5;
+
+
+-- 4. Процедура: Обновить email по ID
+CREATE OR REPLACE PROCEDURE update_email(p_emp_id NUMBER, p_email VARCHAR2)
+IS
+BEGIN
+  UPDATE employees
+  SET email = p_email
+  WHERE employee_id = p_emp_id;
+END;
+/
+
+-- Тестирование:
+-- Перед обновлением
+SELECT email FROM employees WHERE employee_id = 100;
+
+BEGIN
+  update_email(100, 'new.gmail@example.com');
+  COMMIT;
+END;
+/
+
+-- После обновления
+SELECT email FROM employees WHERE employee_id = 100;
+
+
+-- 5. Функция: Количество сотрудников в компании
+CREATE OR REPLACE FUNCTION employee_count
+RETURN NUMBER
+IS
+  v_total NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v_total FROM employees;
+  RETURN v_total;
+END;
+/
+
+-- Тестирование:
+SELECT employee_count() AS total_employees FROM dual;
+
+
+-- 6. Процедура: Увеличить зарплаты на процент
+CREATE OR REPLACE PROCEDURE raise_salary(p_percent NUMBER)
+IS
+BEGIN
+  UPDATE employees
+  SET salary = salary + (salary * p_percent / 100);
+END;
+/
+
+-- Тестирование:
+-- Перед обновлением
+SELECT AVG(salary) AS avg_salary FROM employees;
+
+BEGIN
+  raise_salary(10); -- Увеличить на 10%
+  COMMIT;
+END;
+/
+
+-- После обновления
+SELECT AVG(salary) AS avg_salary FROM employees;
+
+-- 7. Функция: Максимальная зарплата в департаменте
+CREATE OR REPLACE FUNCTION max_salary_in_dept(p_dept_id NUMBER)
+RETURN NUMBER
+IS
+  v_max NUMBER;
+BEGIN
+  SELECT MAX(salary) INTO v_max
+  FROM employees
+  WHERE department_id = p_dept_id;
+  RETURN v_max;
+END;
+/
+
+-- Тестирование:
+SELECT department_id, department_name, max_salary_in_dept(department_id) AS max_salary
+FROM departments WHERE rownum < 5;
+
+
+-- 8. Процедура: Удалить департамент по ID
+CREATE OR REPLACE PROCEDURE delete_dept(p_dept_id NUMBER)
+IS
+BEGIN
+  DELETE FROM departments
+  WHERE department_id = p_dept_id;
+END;
+/
+
+-- Тестирование:
+-- Перед удалением
+SELECT * FROM departments WHERE department_id = 130;
+
+select * from departments;
+
+BEGIN
+  delete_dept(130);
+  COMMIT;
+END;
+/
+
+-- После удаления
+SELECT * FROM departments WHERE department_id = 130;
+
+
+-- 9. Цикл: Вывод всех сотрудников и зарплат
+BEGIN
+  FOR r IN (SELECT first_name || ' ' || last_name AS name, salary FROM employees) LOOP
+    DBMS_OUTPUT.PUT_LINE(r.namet_job_name(p_r.salary);
+  END LOOP;
+END;
+/
+
+-- Перед выполнением нужно включить вывод:
+SET SERVEROUTPUT ON SIZE 1000000;
+
+
+-- 10. Функция: Список сотрудников по департаменту (через курсор)
+CREATE OR REPLACE FUNCTION get_employees_by_dept(p_dept_id NUMBER)
+RETURN SYS_REFCURSOR
+IS
+  c_emp SYS_REFCURSOR;
+BEGIN
+  OPEN c_emp FOR
+    SELECT employee_id, first_name, last_name, salary
+    FROM employees
+    WHERE department_id = p_dept_id;
+  RETURN c_emp;
+END;
+/
+
+-- Тестирование:
+VAR rc REFCURSOR
+EXEC :rc := get_employees_by_dept(60);
+PRINT rc
